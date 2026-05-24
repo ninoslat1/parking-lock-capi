@@ -2,12 +2,12 @@
 #define USERS_HANDLERS_H
 
 #include <winsock2.h>
+#include <mysql/mysql.h>
 
 void handle_user_root(SOCKET client_socket);
-void handle_user_get(SOCKET client_socket);
-void handle_user_post(SOCKET client_socket, const char *body);
-void handle_user_delete(SOCKET client_socket, int id);
-// void handle_user_patch(SOCKET client_socket);
+void handle_user_get(SOCKET client_socket, MYSQL *conn);
+void handle_user_post(SOCKET client_socket, MYSQL *conn, const char *body);
+void handle_user_delete(SOCKET client_socket, MYSQL *conn, int id);
 void handle_user_not_found(SOCKET client_socket);
 
 #endif

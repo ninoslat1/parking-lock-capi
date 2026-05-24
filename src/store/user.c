@@ -1,63 +1,134 @@
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "../include/store/user.h"
 
-User users[MAX_USERS];
+User *get_all_users(MYSQL *conn, int *count) {
 
-int user_count = 0;
-
-void add_user(const char *name) {
-
-    User user;
-
-    user.id = user_count + 1;
-
-    strcpy(user.name, name);
-
-    users[user_count] = user;
-
-    user_count++;
-}
-
-void delete_user(int id) {
-
-    for (int i = 0; i < user_count; i++) {
-
-        if (users[i].id == id) {
-
-            for (int j = i; j < user_count - 1; j++) {
-                users[j] = users[j + 1];
-            }
-
-            user_count--;
-
-            break;
-        }
-    }
-}
-
-User *get_user_by_name(const char *name) {
-
-    for (int i = 0; i < user_count; i++) {
-
-        if (strcmp(users[i].name, name) == 0) {
-
-            return &users[i];
-        }
+    if (mysql_query(conn, "SELECT id, username, usercode, password FROM user")) {
+        printf("Query failed: %s\n", mysql_error(conn));
+        return NULL;
     }
 
-    return NULL;
-}
+    MYSQL_RES *res = mysql_store_result(conn);
+    if (!res) return NULL;
 
-User *get_user_by_id(int id) {
+    int num_rows = (int)mysql_num_rows(res);
+    User *users = malloc(sizeof(User) * num_rows);
 
-    for (int i = 0; i < user_count; i++) {
+    MYSQL_ROW row;
+    int i = 0;
 
-        if (users[i].id == id) {
-
-            return &users[i];
-        }
+    while ((row = mysql_fetch_row(res))) {
+        users[i].id = atoi(row[0]);
+        strncpy(users[i].username, row[1], sizeof(users[i].username) - 1);
+        strncpy(users[i].usercode, row[2], sizeof(users[i].usercode) - 1);
+        strncpy(users[i].password, row[3], sizeof(users[i].password) - 1);
+        i++;
     }
 
-    return NULL;
+    mysql_free_result(res);
+    *count = num_rows;
+
+    return users;
+}
+
+User *get_user_by_id(MYSQL *conn, int id) {
+
+    char query[256];
+    snprintf(query, sizeof(query),
+        "SELECT id, username, usercode, password FROM user WHERE id = %d", id);
+
+    if (mysql_query(conn, query)) {
+        printf("Query failed: %s\n", mysql_error(conn));
+        return NULL;
+    }
+
+    MYSQL_RES *res = mysql_store_result(conn);
+    if (!res) return NULL;
+
+    MYSQL_ROW row = mysql_fetch_row(res);
+    if (!row) {
+        mysql_free_result(res);
+        return NULL;
+    }
+
+    User *user = malloc(sizeof(User));
+    user->id = atoi(row[0]);
+    strncpy(user->username, row[1], sizeof(user->username) - 1);
+    strncpy(user->usercode, row[2], sizeof(user->usercode) - 1);
+    strncpy(user->password, row[3], sizeof(user->password) - 1);
+
+    mysql_free_result(res);
+
+    return user;
+}
+
+User *get_user_by_username(MYSQL *conn, const char *username) {
+
+    char escaped[256];
+    mysql_real_escape_string(conn, escaped, username, strlen(username));
+
+    char query[512];
+    snprintf(query, sizeof(query),
+        "SELECT id, username, usercode, password FROM user WHERE user = '%s'", escaped);
+
+    if (mysql_query(conn, query)) {
+        printf("Query failed: %s\n", mysql_error(conn));
+        return NULL;
+    }
+
+    MYSQL_RES *res = mysql_store_result(conn);
+    if (!res) return NULL;
+
+    MYSQL_ROW row = mysql_fetch_row(res);
+    if (!row) {
+        mysql_free_result(res);
+        return NULL;
+    }
+
+    User *user = malloc(sizeof(User));
+    user->id = atoi(row[0]);
+    strncpy(user->username, row[1], sizeof(user->username) - 1);
+    strncpy(user->usercode, row[2], sizeof(user->usercode) - 1);
+    strncpy(user->password, row[3], sizeof(user->password) - 1);
+
+    mysql_free_result(res);
+
+    return user;
+}
+
+int create_user(MYSQL *conn, const char *username, const char *usercode, const char *password) {
+
+    char esc_username[256], esc_usercode[128], esc_password[512];
+
+    mysql_real_escape_string(conn, esc_username, username, strlen(username));
+    mysql_real_escape_string(conn, esc_usercode, usercode, strlen(usercode));
+    mysql_real_escape_string(conn, esc_password, password, strlen(password));
+
+    char query[1024];
+    snprintf(query, sizeof(query),
+        "INSERT INTO user (username, usercode, password) VALUES ('%s', '%s', '%s')",
+        esc_username, esc_usercode, esc_password);
+
+    if (mysql_query(conn, query)) {
+        printf("Insert failed: %s\n", mysql_error(conn));
+        return -1;
+    }
+
+    return (int)mysql_insert_id(conn);
+}
+
+int delete_user(MYSQL *conn, int id) {
+
+    char query[256];
+    snprintf(query, sizeof(query), "DELETE FROM user WHERE id = %d", id);
+
+    if (mysql_query(conn, query)) {
+        printf("Delete failed: %s\n", mysql_error(conn));
+        return -1;
+    }
+
+    return (int)mysql_affected_rows(conn);
 }

@@ -5,7 +5,7 @@
 #include "../include/server.h"
 #include "../include/router.h"
 #include "../include/db/mysql.h"
-#include <mysql/mysql.h>
+#include "../include/libs/logger.h"
 
 void start_server(int port) {
 
@@ -25,14 +25,8 @@ void start_server(int port) {
 
     listen(server_fd, 10);
 
-    printf("Server running at http://localhost:%d\n", port);
+    LOG_INFO("Server running at http://localhost:%d\n", port);
 
-    MYSQL *db = connect_db();
-
-    if (db != NULL) {
-        printf("Connected!\n");
-    }
-    
     while (1) {
 
         int addrlen = sizeof(address);

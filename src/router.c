@@ -6,11 +6,18 @@
 #include "../include/user_handlers.h"
 #include "../include/libs/request_fmt.h"
 #include "../include/structs/http_request.h"
+#include "../include/db/mysql.h"
 
 void route_request(SOCKET client_socket) {
     HttpRequest req;
 
     char buffer[4096] = {0};
+
+    MYSQL *db = connect_db();
+
+    if (db != NULL) {
+        printf("Connected!\n");
+    }
 
     recv(client_socket, buffer, sizeof(buffer), 0);
     parse_request(buffer, &req);
@@ -23,11 +30,11 @@ void route_request(SOCKET client_socket) {
     }
 
     else if (strncmp(buffer, "GET /users ", 11) == 0) {
-       handle_user_get(client_socket);
+       handle_user_get(client_socket, db);
     }
 
     else if (strncmp(buffer, "POST /users ", 12) == 0) {
-        handle_user_post(client_socket, req.body);
+        handle_user_post(client_socket, db, req.body);
     }
 
     else if (strncmp(buffer, "DELETE /users ", 14) == 0) {
@@ -35,7 +42,7 @@ void route_request(SOCKET client_socket) {
         int id;
         sscanf(req.query, "id=%d", &id);
 
-        handle_user_delete(client_socket, id);
+        handle_user_delete(client_socket,db, id);
     }
 
     else {

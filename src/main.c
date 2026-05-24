@@ -4,9 +4,6 @@
 
 int main() {
     load_env(".env"); 
-    add_user("Alice");
-    add_user("Bob");
-
     start_server(8080);
 
     return 0;
