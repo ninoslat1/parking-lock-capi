@@ -5,10 +5,7 @@
 #include <mysql/mysql.h>
 #include "../include/structs/thread.h"
 
-#define THREAD_POOL_SIZE  8
-#define QUEUE_CAPACITY    1024
-
 void init_thread_pool();
-void enqueue_client(SOCKET client_socket, MYSQL *conn);
+void enqueue_client(SOCKET client_socket);
 
 #endif

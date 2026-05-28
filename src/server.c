@@ -39,23 +39,12 @@ void start_server(int port) {
         SOCKET client_socket =
             accept(server_fd, (struct sockaddr *)&address, &addrlen);
 
-        // if (client_socket != INVALID_SOCKET) {
-        //     route_request(client_socket);
-        // }
-
-        if (client_socket != INVALID_SOCKET){
+        if (client_socket == INVALID_SOCKET){
             LOG_WARN("accept() failed: %d", WSAGetLastError());
             continue;
         }
 
-        MYSQL *conn = connect_db();
-        if (!conn) {
-            LOG_ERROR("DB connection failed");
-            closesocket(client_socket);
-            continue;
-        }
-
-        enqueue_client(client_socket, conn);
+        enqueue_client(client_socket);
     }
 
 

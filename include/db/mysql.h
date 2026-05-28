@@ -3,6 +3,6 @@
 
 #include <mysql/mysql.h>
 
-MYSQL *connect_db();
+MYSQL *connect_db_to(const char *db_name);
 
 #endif

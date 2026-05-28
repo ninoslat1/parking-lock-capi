@@ -15,4 +15,11 @@ typedef struct {
     PoolCond  available;
 } ConnPool;
 
+typedef enum {
+    DB_MST,
+    DB_USR,
+    DB_TRS,
+    DB_COUNT
+} DbTarget;
+
 #endif

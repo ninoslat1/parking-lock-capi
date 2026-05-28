@@ -6,14 +6,12 @@
 #include "../include/router.h"
 #include "../include/user_handlers.h"
 #include "../include/libs/request_fmt.h"
-#include "../include/db/mysql.h"
 
 void route_request(SOCKET client_socket) {
     HttpRequest req;
 
     char buffer[4096] = {0};
 
-    // MYSQL *db = connect_db();
 
     recv(client_socket, buffer, sizeof(buffer), 0);
     parse_request(buffer, &req);

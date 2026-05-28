@@ -6,7 +6,7 @@
 
 User *get_all_users(MYSQL *conn, int *count) {
 
-    if (mysql_query(conn, "SELECT id, username, usercode, password FROM user")) {
+    if (mysql_query(conn, "SELECT id, username, usercode, password FROM myuser")) {
         printf("Query failed: %s\n", mysql_error(conn));
         return NULL;
     }
@@ -38,7 +38,7 @@ User *get_user_by_id(MYSQL *conn, int id) {
 
     char query[256];
     snprintf(query, sizeof(query),
-        "SELECT id, username, usercode, password FROM user WHERE id = %d", id);
+        "SELECT id, username, usercode, password FROM myuser WHERE id = %d", id);
 
     if (mysql_query(conn, query)) {
         printf("Query failed: %s\n", mysql_error(conn));
@@ -72,7 +72,7 @@ User *get_user_by_username(MYSQL *conn, const char *username) {
 
     char query[512];
     snprintf(query, sizeof(query),
-        "SELECT id, username, usercode, password FROM user WHERE user = '%s'", escaped);
+        "SELECT id, username, usercode, password FROM myuser WHERE username = '%s'", escaped);
 
     if (mysql_query(conn, query)) {
         printf("Query failed: %s\n", mysql_error(conn));
@@ -109,7 +109,7 @@ int create_user(MYSQL *conn, const char *username, const char *usercode, const c
 
     char query[1024];
     snprintf(query, sizeof(query),
-        "INSERT INTO user (username, usercode, password) VALUES ('%s', '%s', '%s')",
+        "INSERT INTO myuser (username, usercode, password) VALUES ('%s', '%s', '%s')",
         esc_username, esc_usercode, esc_password);
 
     if (mysql_query(conn, query)) {
@@ -123,7 +123,7 @@ int create_user(MYSQL *conn, const char *username, const char *usercode, const c
 int delete_user(MYSQL *conn, int id) {
 
     char query[256];
-    snprintf(query, sizeof(query), "DELETE FROM user WHERE id = %d", id);
+    snprintf(query, sizeof(query), "DELETE FROM myuser WHERE id = %d", id);
 
     if (mysql_query(conn, query)) {
         printf("Delete failed: %s\n", mysql_error(conn));

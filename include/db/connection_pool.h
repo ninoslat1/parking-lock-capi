@@ -5,7 +5,7 @@
 #include "../include/structs/mysql_pool.h"
 
 void   init_conn_pool();
-MYSQL *borrow_conn();
-void   return_conn(MYSQL *conn);
+MYSQL *borrow_conn(DbTarget db);
+void   return_conn(DbTarget db, MYSQL *conn);
 
 #endif

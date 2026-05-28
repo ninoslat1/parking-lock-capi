@@ -1,49 +1,63 @@
 #include <stdio.h>
+#include <stdlib.h>   
 #include "../include/db/connection_pool.h"
 #include "../include/db/mysql.h"
 #include "../include/libs/logger.h"
 
-static ConnPool pool;
+static ConnPool pools[DB_COUNT];
+
+static const char *db_env_keys[DB_COUNT] = {
+    "DB_MST",   
+    "DB_USR",   
+    "DB_TRS",   
+};
+
 
 void init_conn_pool() {
-    InitializeCriticalSection(&pool.lock);
-    InitializeConditionVariable(&pool.available);
-
-    for(int i=0; i < CONN_POOL_SIZE; i++){
-        pool.conns[i] = connect_db();
-        pool.in_use[i] = 0;
-
-        if(!pool.conns[i]){
-            LOG_ERROR("Failed to initialize db connection %d", i);
+    for (int d = 0; d < DB_COUNT; d++){
+        InitializeCriticalSection(&pools[d].lock);
+        InitializeConditionVariable(&pools[d].available);
+    
+        const char *db_name = getenv(db_env_keys[d]);
+        for(int i=0; i < CONN_POOL_SIZE; i++){
+            pools[d].conns[i] = connect_db_to(db_name);
+            pools[d].in_use[i] = 0;
+    
+            if(!pools[d].conns[i]){
+                LOG_ERROR("Failed to initialize db connection %d", i);
+            }
         }
+    
+        LOG_INFO("Connection pool ready (%d connections)", CONN_POOL_SIZE);
     }
-
-    LOG_INFO("Connection pool ready (%d connections)", CONN_POOL_SIZE);
 }
 
-MYSQL *borrow_conn() {
-    EnterCriticalSection(&pool.lock);
+MYSQL *borrow_conn(DbTarget db) {
+    ConnPool *p = &pools[db];
+    EnterCriticalSection(&p->lock);
     while(1) {
         for(int i = 0;i<CONN_POOL_SIZE; i++){
-            if(!pool.in_use[i]){
-                pool.in_use[i] = 1;
-                LeaveCriticalSection(&pool.lock);
-                return pool.conns[i];
+            if(!p->in_use[i]){
+                p->in_use[i] = 1;
+                LeaveCriticalSection(&p->lock);
+                return p->conns[i];
             }
         }
 
-        SleepConditionVariableCS(&pool.available, &pool.lock, INFINITE);
+        SleepConditionVariableCS(&p->available, &p->lock, INFINITE);
     }
 }
 
-void return_conn(MYSQL *conn){
-    EnterCriticalSection(&pool.lock);
+void return_conn(DbTarget db, MYSQL *conn){
+    ConnPool *p = &pools[db];
+
+    EnterCriticalSection(&p->lock);
     for (int i =0; i< CONN_POOL_SIZE; i++){
-        if(pool.conns[i] == conn){
-            pool.in_use[i] = 0;
+        if(p->conns[i] == conn){
+            p->in_use[i] = 0;
             break;
         }
     }
-    WakeConditionVariable(&pool.available);
-    LeaveCriticalSection(&pool.lock);
+    WakeConditionVariable(&p->available);
+    LeaveCriticalSection(&p->lock);
 }
