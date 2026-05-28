@@ -4,6 +4,6 @@
 #include <winsock2.h>
 #include "../include/libs/request_fmt.h"
 
-int user_routes(SOCKET client_socket, const char *buffer, HttpRequest *req);
+int user_routes(SOCKET client_socket, HttpRequest *req);
 
 #endif

@@ -6,6 +6,7 @@
 #include "../include/router.h"
 #include "../include/libs/request_fmt.h"
 #include "../include/routes/user_route.h"
+#include "../include/libs/response_fmt.h"
 
 
 void route_request(SOCKET client_socket) {
@@ -15,14 +16,14 @@ void route_request(SOCKET client_socket) {
     recv(client_socket, buffer, sizeof(buffer), 0);
     parse_request(buffer, &req);
 
-    matched = matched || user_routes(client_socket, buffer, &req);
-    
+    matched = matched || user_routes(client_socket, &req);
+
     if (!matched) {
         char *response = httpResponseFormat(
             404, "Not Found", "application/json",
             "{\"message\": \"Route not found\"}"
         );
-        send_res(client_socket, response);
+        send(client_socket, response, strlen(response), 0);
         free(response);
     }
 

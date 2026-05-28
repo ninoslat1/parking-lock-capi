@@ -4,8 +4,7 @@
 #include "../include/routes/user_route.h"
 #include "../include/handlers/user_handlers.h"
 
-// Returns 1 if route matched, 0 if not
-int user_routes(SOCKET client_socket, const char *buffer, HttpRequest *req) {
+int user_routes(SOCKET client_socket, HttpRequest *req) {
 
     if (strcmp(req->method, "GET") == 0 && strcmp(req->path, "/") == 0) {
         handle_user_root(client_socket);

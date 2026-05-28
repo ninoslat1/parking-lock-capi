@@ -9,6 +9,8 @@ SRC = \
 	src/libs/*.c \
 	src/store/*.c \
 	src/config/*.c \
+	src/routes/*.c \
+	src/handlers/*.c \
 	src/db/*.c 
 
 TARGET = build/server.exe
