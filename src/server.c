@@ -6,6 +6,8 @@
 #include "../include/router.h"
 #include "../include/db/mysql.h"
 #include "../include/libs/logger.h"
+#include "../include/libs/thread_pool.h"
+#include "../include/db/connection_pool.h"
 
 void start_server(int port) {
 
@@ -25,6 +27,9 @@ void start_server(int port) {
 
     listen(server_fd, 10);
 
+    init_conn_pool();
+    init_thread_pool();  
+
     LOG_INFO("Server running at http://localhost:%d\n", port);
 
     while (1) {
@@ -34,9 +39,23 @@ void start_server(int port) {
         SOCKET client_socket =
             accept(server_fd, (struct sockaddr *)&address, &addrlen);
 
-        if (client_socket != INVALID_SOCKET) {
-            route_request(client_socket);
+        // if (client_socket != INVALID_SOCKET) {
+        //     route_request(client_socket);
+        // }
+
+        if (client_socket != INVALID_SOCKET){
+            LOG_WARN("accept() failed: %d", WSAGetLastError());
+            continue;
         }
+
+        MYSQL *conn = connect_db();
+        if (!conn) {
+            LOG_ERROR("DB connection failed");
+            closesocket(client_socket);
+            continue;
+        }
+
+        enqueue_client(client_socket, conn);
     }
 
 

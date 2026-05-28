@@ -6,8 +6,8 @@
 #include "../include/user_handlers.h"
 #include "../include/libs/response_fmt.h"
 #include "../include/store/user.h"
-#include "../include/db/mysql.h"
 #include "../include/libs/json_parser.h"
+#include "../include/db/connection_pool.h"
 
 static void send_res(SOCKET client_socket, char *response) {
     send(client_socket, response, strlen(response), 0);
@@ -24,7 +24,9 @@ void handle_user_root(SOCKET client_socket){
     send_res(client_socket, response);
 }
 
-void handle_user_get(SOCKET client_socket, MYSQL *conn) {
+void handle_user_get(SOCKET client_socket) {
+
+    MYSQL *conn = borrow_conn();
 
     int count = 0;
     User *users = get_all_users(conn, &count);
@@ -64,8 +66,9 @@ void handle_user_get(SOCKET client_socket, MYSQL *conn) {
     free(response);
 }
 
-void handle_user_post(SOCKET client_socket, MYSQL *conn, const char *body) {
+void handle_user_post(SOCKET client_socket, const char *body) {
 
+    MYSQL *conn = borrow_conn();
     char username[128] = {0}, usercode[64] = {0}, password[256] = {0};
     char *response;
 
@@ -114,8 +117,9 @@ void handle_user_post(SOCKET client_socket, MYSQL *conn, const char *body) {
     free(response);
 }
 
-void handle_user_delete(SOCKET client_socket, MYSQL *conn, int id) {
+void handle_user_delete(SOCKET client_socket, int id) {
 
+    MYSQL *conn = borrow_conn();
     char *response;
 
     User *user = get_user_by_id(conn, id);

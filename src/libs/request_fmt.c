@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "../include/libs/request_fmt.h"
-#include "../include/structs/http_request.h"
 
 void parse_request(char *raw, HttpRequest *req) {
     sscanf(raw, "%s %s", req->method, req->path);
