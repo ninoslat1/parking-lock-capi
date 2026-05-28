@@ -3,7 +3,7 @@
 #include <string.h>
 #include <winsock2.h>
 
-#include "../include/user_handlers.h"
+#include "../include/handlers/user_handlers.h"
 #include "../include/libs/response_fmt.h"
 #include "../include/store/user.h"
 #include "../include/libs/json_parser.h"
@@ -154,11 +154,11 @@ void handle_user_delete(SOCKET client_socket, int id) {
     free(response);
 }
 
-void handle_user_not_found(SOCKET client_socket) {
-    char *response = httpResponseFormat(
-        404, "Not Found", "application/json",
-        "{\"message\": \"Route not found\"}"
-    );
-    send_res(client_socket, response);
-    free(response);
-}
+// void handle_user_not_found(SOCKET client_socket) {
+//     char *response = httpResponseFormat(
+//         404, "Not Found", "application/json",
+//         "{\"message\": \"Route not found\"}"
+//     );
+//     send_res(client_socket, response);
+//     free(response);
+// }
